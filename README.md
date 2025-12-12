@@ -8,10 +8,10 @@ This project contains automated test cases for the SauceDemo website, covering k
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Your Framework - e.g., Selenium, Cypress, Playwright]
-- **Language:** [Your Language - e.g., Python, JavaScript, Java]
-- **Test Runner:** [e.g., pytest, Jest, TestNG]
-- **Reporting:** [e.g., Allure, HTML Reports]
+- **Framework:** [Robot Framework]
+- **Language:** [Python]
+- **Test Runner:** [Robotframework builtin]
+- **Reporting:** [HTML Reports]
 
 ## 📁 Project Structure
 
