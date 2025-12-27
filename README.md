@@ -5,7 +5,6 @@ Automated test suite for [Saucedemo](https://www.saucedemo.com/) - a sample e-co
 ![Robot Framework](https://img.shields.io/badge/Robot%20Framework-000000?style=flat&logo=robot-framework&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 ![Selenium](https://img.shields.io/badge/Selenium-43B02A?style=flat&logo=selenium&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-blue)
 
 ---
 
@@ -297,12 +296,6 @@ Senior QA Automation Engineer
 - GitHub: [@noobcat0418](https://github.com/noobcat0418)
 - LinkedIn: [Mikeryan Cervantes](https://www.linkedin.com/in/mikeryan-cervantes)
 - Email: cervantesmikeryan24@gmail.com
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
