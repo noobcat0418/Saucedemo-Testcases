@@ -1,4 +1,4 @@
-# 🧪 Saucedemo Test Automation Suite
+# Robotframework saucedemo Test Automation Suite
 
 Automated test suite for [Saucedemo](https://www.saucedemo.com/) - a sample e-commerce web application by Sauce Labs. This project demonstrates end-to-end test automation using **Robot Framework** with **Python** and **SeleniumLibrary**.
 
@@ -8,7 +8,7 @@ Automated test suite for [Saucedemo](https://www.saucedemo.com/) - a sample e-co
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [About the Project](#about-the-project)
 - [Tech Stack](#tech-stack)
@@ -22,7 +22,7 @@ Automated test suite for [Saucedemo](https://www.saucedemo.com/) - a sample e-co
 
 ---
 
-## 🎯 About the Project
+## About the Project
 
 This repository contains automated test cases for the Saucedemo web application, covering critical e-commerce functionalities including:
 
@@ -36,7 +36,7 @@ The project follows a **keyword-driven** approach with reusable keywords and res
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technology |
 |----------|------------|
@@ -49,7 +49,7 @@ The project follows a **keyword-driven** approach with reusable keywords and res
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Saucedemo-Testcases/
@@ -79,7 +79,7 @@ Saucedemo-Testcases/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -130,7 +130,7 @@ webdrivermanager
 
 ---
 
-## ▶️ Running Tests
+## Running Tests
 
 ### Run all tests
 ```bash
@@ -173,7 +173,7 @@ robot --test "Valid Login With Standard User" tests/
 
 ---
 
-## 📝 Test Scenarios
+## Test Scenarios
 
 ### Authentication Tests
 | Test Case | Description | Tag |
@@ -214,7 +214,7 @@ robot --test "Valid Login With Standard User" tests/
 
 ---
 
-## 📊 Reports
+## Reports
 
 Robot Framework automatically generates HTML reports after each test run.
 
@@ -247,7 +247,7 @@ xdg-open results/report.html
 
 ---
 
-## 🔧 Sample Test Code
+## Sample Test Code
 
 ```robot
 *** Settings ***
@@ -276,7 +276,7 @@ Invalid Login With Wrong Password
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -288,7 +288,7 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 👤 Author
+## Author
 
 **Mike Ryan Cervantes**  
 Senior QA Automation Engineer
