@@ -1,0 +1,48 @@
+[project]
+name = "saucedemo-robot-tests"
+version = "1.0.0"
+description = "Robot Framework test automation suite for Saucedemo application"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "robotframework>=6.0",
+    "robotframework-seleniumlibrary>=6.0",
+    "webdriver-manager>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "robotframework-robocop>=4.0",
+    "robotframework-tidy>=4.0",
+]
+
+[tool.robocop]
+include = [
+    "TestCases",
+    "resources",
+]
+exclude = [
+    "results",
+    "log",
+    ".git",
+    "__pycache__",
+]
+configure = [
+    "0501:min_calls:1",
+    "0502:max_calls:25",
+    "0401:max_testcases:15",
+    "0909:max_lines:500",
+]
+
+[tool.robotidy]
+overwrite = true
+line_length = 120
+separator = "space"
+space_count = 4
+startline = 1
+endline = 0
+configure = [
+    "NormalizeSeparators:separator=space:indent=4",
+    "OrderSettings:keyword_before=documentation,tags,arguments",
+    "OrderSettingsSection:imports_order=library,resource,variables",
+]

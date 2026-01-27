@@ -1,0 +1,12 @@
+# Robot Framework Core
+robotframework>=6.0
+
+# Selenium Library for web automation
+robotframework-seleniumlibrary>=6.0
+
+# WebDriver Manager for automatic driver management
+webdriver-manager>=4.0
+
+# Linting and formatting tools (optional, for development)
+robotframework-robocop>=4.0
+robotframework-tidy>=4.0

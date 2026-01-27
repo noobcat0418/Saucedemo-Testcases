@@ -1,0 +1,59 @@
+# Robocop Configuration File
+# Robot Framework linting configuration
+
+# Paths to include for linting
+--include
+TestCases
+--include
+resources
+
+# Rules to configure
+# 0201: Missing documentation in test case (warning)
+# 0202: Missing documentation in keyword (warning)
+# 0301: Invalid section header (error)
+# 0302: Duplicated test case (error)
+# 0401: Too many test cases in file (warning, max 10)
+# 0501: Too few calls in test case (warning, min 2)
+# 0502: Too many calls in test case (warning, max 20)
+
+# Configure rule thresholds
+--configure
+0501:min_calls:1
+
+--configure
+0502:max_calls:25
+
+--configure
+0401:max_testcases:15
+
+# Enable specific rules
+--include
+W0201
+--include
+W0202
+--include
+E0301
+--include
+E0302
+--include
+W0401
+--include
+W0501
+--include
+W0502
+
+# File patterns to exclude
+--exclude
+*.pyc
+--exclude
+__pycache__
+--exclude
+results
+--exclude
+log
+--exclude
+.git
+
+# Output format
+--reports
+all

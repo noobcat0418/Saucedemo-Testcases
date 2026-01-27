@@ -1,262 +1,129 @@
+*** Comments ***
+# US002: Manage Shopping Cart
+# Test suite for verifying shopping cart management functionality.
+
 *** Settings ***
-Library           SeleniumLibrary
-Suite Setup    Open Browser and Maximize
-Suite Teardown    Close Browser
+Documentation    Test suite for managing shopping cart on Saucedemo.
+...              Covers adding products, verifying cart contents, removing products,
+...              and validating price calculations during checkout.
+
+Library          SeleniumLibrary
+Library          Collections
+
+Resource         ../resources/keywords/common_keywords.resource
+Resource         ../resources/keywords/login_keywords.resource
+Resource         ../resources/keywords/inventory_keywords.resource
+Resource         ../resources/keywords/cart_keywords.resource
+Resource         ../resources/keywords/checkout_keywords.resource
+
+Resource         ../data/test_data.resource
+Resource         ../resources/locators/inventory_locators.resource
+Resource         ../resources/locators/cart_locators.resource
+Resource         ../resources/locators/checkout_locators.resource
+
+Suite Setup      Open Browser And Maximize    ${BASE_URL}
+Suite Teardown   Close Browser
 
 *** Variables ***
-#Testdata
-${URL}         https://www.saucedemo.com/v1/
-${USERNAME}    standard_user
-${PASSWORD}    secret_sauce
-${PRODUCT_1}    Sauce Labs Backpack
-${PRODUCT_2}    Sauce Labs Bike Light
-${PRODUCT_3}    Sauce Labs Bolt T-Shirt
-${TD_FIRST_NAME}    Juan
-${TD_LAST_NAME}    Cruz
-${TD_POSTAL_CODE}    1234
-
-#Web Elements
-${CART_ICON}      xpath=//div[contains(@id, 'shopping_cart_container')]
-${REMOVE_BUTTON}  xpath=//button[contains(text(), 'Remove')]
-${PRODUCT_LIST}   xpath=//div[contains(@class, 'cart_list')]/div[contains(@class, 'cart_item')]
-${CONTINUE_SHOPPING_BUTTON}    xpath=//div[contains(@class, 'cart_footer')]/a[contains(normalize-space(), 'Continue Shopping')]
-${CHECKOUT_BUTTON}    xpath=//div[contains(@class, 'cart_footer')]/child::a[contains(normalize-space(), 'CHECKOUT')]
-${CANCEL_BUTTON}    xpath=//div[contains(@class, 'cart_footer')]/child::a[contains(normalize-space(), 'CANCEL')]
-${FIRST_NAME}    xpath=//input[@id='first-name']
-${LAST_NAME}    xpath=//input[@id='last-name']
-${POSTAL_CODE}    xpath=//input[@id='postal-code']
-${CONTINUE_BUTTON}    xpath=//input[contains(@class, 'btn_primary cart_button')]
-${TAX_LABEL}    xpath=//div[contains(@class, 'summary_tax_label')]
-${TOTAL_PRICE}    xpath=//div[contains(@class, 'summary_total_label')]
+${PRODUCT_1_PRICE}    ${0}
+${PRODUCT_2_PRICE}    ${0}
 
 *** Test Cases ***
 Manage Shopping Cart
-    [Documentation]    Verify that users can manage their shopping cart.
+    [Documentation]    Verify that users can manage their shopping cart,
+    ...                add/remove products, and see correct price calculations.
+    [Tags]    smoke    cart    checkout
 
-    Login To Application
-    Add Product To Cart    ${PRODUCT_1}  ${PRODUCT_2}
-    ${product1_price}    ${product2_price}=    Save product price on inventory page    ${PRODUCT_1}    ${PRODUCT_2}
-    Verify Cart Icon Functionality
-    Verify Cart Displays Correct Products    ${PRODUCT_1_PRICE}    ${PRODUCT_2_PRICE}
-    Remove Product From Cart    ${PRODUCT_1}
-    Populate Check out: Your Information
-    Verify Total Price Updates when a product is removed
-    #Verify Total Price Updates when a product is added
+    Login To Application    ${VALID_USERNAME}    ${VALID_PASSWORD}
+    Add Products To Cart
+    Save Product Prices From Inventory
+    Navigate To Cart
+    Verify Cart Contains Correct Products
+    Remove First Product And Proceed To Checkout
+    Fill Checkout Information    ${CHECKOUT_FIRST_NAME}    ${CHECKOUT_LAST_NAME}    ${CHECKOUT_POSTAL_CODE}
+    Verify Total Price Updates After Product Removal
 
 *** Keywords ***
-Open Browser and Maximize
-    Open Browser    ${URL}    Chrome
-    Maximize Browser Window
-    Sleep    2  # Optional: only if page loading requires additional wait time
+Add Products To Cart
+    [Documentation]    Adds the first two products to the shopping cart.
+    Wait Until Element Is Visible    ${INVENTORY_ITEM}    ${DEFAULT_TIMEOUT}
+    Add Product To Cart By Button    ${ADD_BACKPACK_BTN}
+    Add Product To Cart By Button    ${ADD_BIKE_LIGHT_BTN}
+    Wait Until Element Is Visible    ${CART_BADGE}    5s
+    Log    Products added to cart
 
-Login To Application
-    [Documentation]    Log in to the application
-    Input Text    xpath=//input[@id='user-name']    ${USERNAME}
-    Input Text    xpath=//input[@id='password']    ${PASSWORD}
-    Click Button    xpath=//input[@id='login-button']
-    Wait Until Element Is Visible    xpath=//div[@class='inventory_item_name']    10  # Ensures inventory items are visible after login
+Save Product Prices From Inventory
+    [Documentation]    Saves the prices of the first two products from inventory page.
+    ${price1}=    Get Product Price By Index    0
+    ${price2}=    Get Product Price By Index    1
+    Set Suite Variable    ${PRODUCT_1_PRICE}    ${price1}
+    Set Suite Variable    ${PRODUCT_2_PRICE}    ${price2}
+    Log    Product 1 price: ${PRODUCT_1_PRICE}
+    Log    Product 2 price: ${PRODUCT_2_PRICE}
 
-Add Product To Cart
-    [Documentation]    Add two products to the cart
-    [Arguments]    ${PRODUCT_1}    ${PRODUCT_2}
+Verify Cart Contains Correct Products
+    [Documentation]    Verifies cart displays correct products with quantities and prices.
+    Verify Cart Item Count    2
+    Verify Product In Cart    ${PRODUCT_BACKPACK}
+    Verify Product In Cart    ${PRODUCT_BIKE_LIGHT}
+    Verify Product Quantity In Cart    ${PRODUCT_BACKPACK}    1
+    Verify Product Quantity In Cart    ${PRODUCT_BIKE_LIGHT}    1
 
-    Wait Until Element Is Visible    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button      10
-    Click Element     xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button
-    Click Element     xpath=//div[contains(text(),'${PRODUCT_2}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button
+    ${cart_price1}=    Get Cart Product Price    ${PRODUCT_BACKPACK}
+    ${cart_price2}=    Get Cart Product Price    ${PRODUCT_BIKE_LIGHT}
+    Should Be Equal As Numbers    ${PRODUCT_1_PRICE}    ${cart_price1}
+    Should Be Equal As Numbers    ${PRODUCT_2_PRICE}    ${cart_price2}
 
-Save product price on inventory page
-    [Documentation]    Save product price from inventory page
-    [Arguments]    ${PRODUCT_1_PRICE}    ${PRODUCT_2_PRICE}
+Remove First Product And Proceed To Checkout
+    [Documentation]    Removes the first product from cart and proceeds to checkout.
+    Remove Product From Cart By Name    ${REMOVE_BACKPACK_BTN}
+    Click Checkout Button
 
-    #Get products price from inventory page and convert to number
-    ${product1_price_text}=    Get Text    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div[contains(@class, 'pricebar')]/div[contains(@class, 'inventory_item_price')]
-    ${product1_price}=    Convert To Number    ${product1_price_text.replace('$', '')}
-    ${product2_price_text}=    Get Text    xpath=//div[contains(text(),'${PRODUCT_2}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div[contains(@class, 'pricebar')]/div[contains(@class, 'inventory_item_price')]
-    ${product2_price}=    Convert To Number    ${product2_price_text.replace('$', '')}
-    Log    get product price: ${product1_price}
-    Log    get product price: ${product2_price}
-    RETURN    ${product1_price}    ${product2_price}
+Verify Total Price Updates After Product Removal
+    [Documentation]    Verifies total price is updated correctly when products are removed.
+    ...                This test adds more products, checks totals, and validates price calculations.
 
-Verify Cart Icon Functionality
-    [Documentation]    Verify cart icon works properly
-    Click Element    ${CART_ICON}
-    Page Should Contain Element    ${PRODUCT_LIST}
+    # Go back to inventory and add more products
+    Cancel Checkout
+    Navigate To Cart
+    Click Continue Shopping
 
-Verify Cart Displays Correct Products
-    [Documentation]    Verify cart cart display products
-    [Arguments]    ${PRODUCT_1_PRICE}    ${PRODUCT_2_PRICE}
-    ${products}=    Get WebElements    ${PRODUCT_LIST}  #List of product elements
-    ${product_count}=    Get Length    ${products}  #Count of products
-    Should Be Equal As Integers    ${product_count}    2  # Compare static number of added products
+    # Add products again for price verification
+    Wait Until Element Is Visible    ${INVENTORY_ITEM}    ${DEFAULT_TIMEOUT}
+    Add Product To Cart By Button    ${ADD_BACKPACK_BTN}
+    Add Product To Cart By Button    ${ADD_BOLT_TSHIRT_BTN}
 
-    #Verify product names added on cart
-    ${cart_product1}=    Get Text    xpath=//div[contains(@class, 'inventory_item_name') and text()='${PRODUCT_1}']
-    ${cart_product2}=    Get Text    xpath=//div[contains(@class, 'inventory_item_name') and text()='${PRODUCT_2}']
-    Should Be Equal    ${cart_product1}    ${PRODUCT_1}
-    Should Be Equal    ${cart_product2}    ${PRODUCT_2}
+    # Get prices from inventory
+    ${price1}=    Get Product Price By Index    0
+    ${price3}=    Get Product Price By Index    2
+    Log    Product 1 price: ${price1}
+    Log    Product 3 price: ${price3}
 
-    #Verify quantities added on cart
-    ${quantity_product1}=    Get Text    xpath=//div[contains(text(), '${PRODUCT_1}')]/preceding::div[contains(@class, 'cart_quantity')][1]
-    ${quantity_product2}=    Get Text    xpath=//div[contains(text(), '${PRODUCT_2}')]/preceding::div[contains(@class, 'cart_quantity')][1]
-    Should Be Equal    ${quantity_product1}    1
-    Should Be Equal    ${quantity_product2}    1
-    
-    #Verify Total Price added on cart
-    ${cart_product1_price_text}    Get Text    xpath=//div[contains(text(), '${PRODUCT_1}')]/following::div[contains(@class, 'inventory_item_price')][1]
-    ${cart_product1_price}=    Convert To Number    ${cart_product1_price_text.replace('$', '')}
-    
-    ${cart_product2_price_text}    Get Text    xpath=//div[contains(text(), '${PRODUCT_2}')]/following::div[contains(@class, 'inventory_item_price')][1]
-    ${cart_product2_price}=    Convert To Number    ${cart_product2_price_text.replace('$', '')}
+    # Proceed to checkout
+    Navigate To Cart
+    Click Checkout Button
+    Fill Checkout Information    ${CHECKOUT_FIRST_NAME}    ${CHECKOUT_LAST_NAME}    ${CHECKOUT_POSTAL_CODE}
 
-    Should Be Equal As Numbers    ${product1_price}     ${cart_product1_price}
-    Should Be Equal As Numbers    ${product2_price}     ${cart_product2_price}
+    # Get initial total and tax
+    ${initial_total}=    Get Summary Total
+    ${initial_tax}=    Get Summary Tax
+    Log    Initial total price: ${initial_total}
+    Log    Initial tax: ${initial_tax}
 
-Remove Product From Cart
-    [Documentation]    Remove one product on cart
-    [Arguments]    ${PRODUCT_1}
-    Click Element    xpath=//div[contains(text(), '${PRODUCT_1}')]/ancestor::div[contains(@class, 'cart_item_label')]//button[contains(@class, 'btn_secondary cart_button')]    # Remove one product
-    Wait Until Element Is Not Visible    //div[contains(text(), '${PRODUCT_1}')]/ancestor::div[contains(@class, 'cart_item_label')]//button[contains(@class, 'btn_secondary cart_button')]    10    # Wait for the first product to be removed
-    Wait Until Element Is Visible    ${CHECKOUT_BUTTON}    10
-    Click Link    ${CHECKOUT_BUTTON}
+    # Go back and remove a product
+    Cancel Checkout
+    Navigate To Cart
+    Remove Product From Cart By Name    ${REMOVE_BACKPACK_BTN}
+    Click Checkout Button
 
-Populate Check out: Your Information
-    [Documentation]    Populate Check Out: Your Information page
-    Wait Until Element Is Visible    ${FIRST_NAME}    5
-    Input Text    ${FIRST_NAME}    ${TD_FIRST_NAME}
-    Input Text    ${LAST_NAME}    ${TD_LAST_NAME}    
-    Input Text    ${POSTAL_CODE}    ${TD_POSTAL_CODE}
-    Click Button    ${CONTINUE_BUTTON}
+    Fill Checkout Information    ${CHECKOUT_FIRST_NAME}    ${CHECKOUT_LAST_NAME}    ${CHECKOUT_POSTAL_CODE}
 
-Verify Total Price Updates when a product is removed
-    [Documentation]    Verify total price is updated when a product is removed
+    # Get updated total
+    ${updated_total}=    Get Summary Total
+    ${updated_tax}=    Get Summary Tax
+    Log    Updated total price: ${updated_total}
+    Log    Updated tax: ${updated_tax}
 
-    Wait Until Element Is Visible    ${CANCEL_BUTTON}
-    Click Link    ${CANCEL_BUTTON}    #Clink cancel to go to inventory page
-
-    Wait Until Element Is Visible    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button      10    #Wait for product to display
-    Click Element     xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button    #Add another product
-    Click Element     xpath=//div[contains(text(),'${PRODUCT_3}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button    #Add another product
-
-    #Get products price from add to cart page and convert to number
-    ${product1_price_text}=    Get Text    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div[contains(@class, 'pricebar')]/div[contains(@class, 'inventory_item_price')]
-    ${product1_price_value}=    Convert To Number    ${product1_price_text.replace('$', '')}
-    ${product3_price_text}=    Get Text    xpath=//div[contains(text(),'${PRODUCT_3}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div[contains(@class, 'pricebar')]/div[contains(@class, 'inventory_item_price')]
-    ${product3_price_value}=    Convert To Number    ${product3_price_text.replace('$', '')}
-    Log    get product price: ${product1_price_value}
-    Log    get product price: ${product3_price_value}
-
-    #Proceed to checkout page
-    Click Element    ${CART_ICON}
-    Wait Until Element Is Visible    ${CHECKOUT_BUTTON}    10
-    Click Element    ${CHECKOUT_BUTTON}
-
-    #Repopulate Check out: Your information page
-    Populate Check out: Your Information
-
-    #Get initial total price and convert to number
-    Wait Until Element Is Visible    ${TOTAL_PRICE}    5
-    ${total_price_text}=    Get Text    ${TOTAL_PRICE}
-    ${initial_total_price_convert}=    Evaluate    ''.join(c for c in '''${total_price_text}''' if c.isdigit() or c == '.')
-    ${initial_total_price_value}=    Convert To Number    ${initial_total_price_convert}
-    log    initial total price: ${initial_total_price_value}
-
-    #Get tax of first product and convert to number
-    ${tax_first_product_text}=    Get Text    ${TAX_LABEL}
-    ${tax_first_product_convert}=    Evaluate    ''.join(c for c in '''${tax_first_product_text}''' if c.isdigit() or c == '.')
-    ${tax_first_product_value}=    Convert To Number    ${tax_first_product_convert}
-    log    first product tax: ${tax_first_product_value}
-
-    Wait Until Element Is Visible    ${CANCEL_BUTTON} 
-    Click Link    ${CANCEL_BUTTON}    #Clink cancel to go to inventory page
-    Verify Cart Icon Functionality    #Clink cart icon
-    Click Button    xpath=//div[contains(text(), '${PRODUCT_1}')]/ancestor::div[contains(@class, 'cart_item_label')]/div/button    #Remove product 1
-    Wait Until Element Is Visible    ${CHECKOUT_BUTTON}    10
-    Click Element    ${CHECKOUT_BUTTON}    #Proceed to checkout products
-
-    #Repopulate Check out: Your information page
-    Populate Check out: Your Information
-
-    #Get updated total price remove the 'total:' and convert to number
-    Wait Until Element Is Visible    ${TOTAL_PRICE}    5
-    ${updated_total_price_text}=    Get Text    ${TOTAL_PRICE}
-    ${updated_total_price_convert}=    Evaluate    ''.join(c for c in '''${updated_total_price_text}''' if c.isdigit() or c == '.')
-    ${updated_total_price_value}=    Convert To Number    ${updated_total_price_convert}
-    log    updated total price: ${updated_total_price_value}
-
-    #Get tax of second product
-    ${tax_second_product_text}=    Get Text    ${TAX_LABEL}
-    ${tax_second_product_convert}=    Evaluate    ''.join(c for c in '''${tax_second_product_text}''' if c.isdigit() or c == '.')
-    ${tax_second_product_value}=    Convert To Number    ${tax_second_product_convert}
-    ${all_tax_value}    Evaluate    abs(${tax_first_product_value} - ${tax_second_product_value})
-    log    first product tax: ${tax_first_product_value}
-    log    second product tax: ${tax_second_product_value}
-    log    all product tax: ${all_tax_value}
-
-    #Validate expected total price and updated total price not equal since 1 product is removed
-    ${expected_total_price}=    Evaluate    ${initial_total_price_value} + ${product1_price_value}+ ${product3_price_value} + ${all_tax_value}
-    Log    Initial total: ${initial_total_price_value}
-    Log    product1 price: ${product1_price_value}
-    Log    product3 price: ${product3_price_value}
-    Log    updated total price: ${updated_total_price_value}
-    Log    expected total price: ${expected_total_price}
-    Should Not Be Equal As Numbers     ${updated_total_price_value}    ${expected_total_price}
-
-#This is an additional test scenario when you add a product and validate the total price. Commented for now
-Verify Total Price Updates when a product is added
-    [Documentation]    Verify total price is updated when a product is added
-
-    #Get initial total price and convert to number
-    Wait Until Element Is Visible    ${TOTAL_PRICE}    5
-    ${total_price_text}=    Get Text    ${TOTAL_PRICE}
-    ${initial_total_price_convert}=    Evaluate    ''.join(c for c in '''${total_price_text}''' if c.isdigit() or c == '.')
-    ${initial_total_price_value}=    Convert To Number    ${initial_total_price_convert}
-    log    initial total price: ${initial_total_price_value}
-    
-    #Get tax of first product and convert to number
-    ${tax_first_product_text}=    Get Text    ${TAX_LABEL}    
-    ${tax_first_product_convert}=    Evaluate    ''.join(c for c in '''${tax_first_product_text}''' if c.isdigit() or c == '.')
-    ${tax_first_product_value}=    Convert To Number    ${tax_first_product_convert}
-    log    first product tax: ${tax_first_product_value}
-    
-    Wait Until Element Is Visible    ${CANCEL_BUTTON}
-    Click Link    ${CANCEL_BUTTON}    #Clink cancel to go to inventory page
-    
-    Wait Until Element Is Visible    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button      10    #Wait for product to display
-    Click Element     xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div/button    #Add another product
-
-    #Get product price and convert to number
-    ${product_price_text}=    Get Text    xpath=//div[contains(text(),'${PRODUCT_1}')]/ancestor::div[@class='inventory_item_label']/following-sibling::div[contains(@class, 'pricebar')]/div[contains(@class, 'inventory_item_price')]
-    ${product_price}=    Convert To Number    ${product_price_text.replace('$', '')}
-    Log    get product price: ${product_price}
-    
-    #Proceed to checkout page
-    Click Element    ${CART_ICON}
-    Wait Until Element Is Visible    ${CHECKOUT_BUTTON}    10
-    Click Element    ${CHECKOUT_BUTTON}
-
-    #Repopulate Check out: Your information page
-    Populate Check out: Your Information
-
-    #Get updated total price remove the 'total:' and convert to number
-    Wait Until Element Is Visible    ${TOTAL_PRICE}    5
-    ${updated_total_price_text}=    Get Text    ${TOTAL_PRICE}
-    ${updated_total_price_convert}=    Evaluate    ''.join(c for c in '''${updated_total_price_text}''' if c.isdigit() or c == '.')
-    ${updated_total_price_value}=    Convert To Number    ${updated_total_price_convert}
-    log    updated total price: ${updated_total_price_value}
-
-    #Get tax of second product
-    ${tax_second_product_text}=    Get Text    ${TAX_LABEL}
-    ${tax_second_product_convert}=    Evaluate    ''.join(c for c in '''${tax_second_product_text}''' if c.isdigit() or c == '.')
-    ${tax_second_product_value}=    Convert To Number    ${tax_second_product_convert}
-    ${all_tax_value}    Evaluate    abs(${tax_first_product_value} - ${tax_second_product_value})
-    log    first product tax: ${tax_first_product_value}
-    log    second product tax: ${tax_second_product_value}
-    log    all product tax: ${all_tax_value}
-    
-    #Validate expected total price and updated total price
-    ${expected_total_price}=    Evaluate    ${initial_total_price_value} + ${product_price} + ${all_tax_value}
-    Log    Initial total: ${initial_total_price_value}
-    Log    product price: ${product_price}
-    Log    updated total price: ${updated_total_price_value}
-    Log    expected total price: ${expected_total_price}
-    Should Be Equal As Numbers    ${updated_total_price_value}    ${expected_total_price}
+    # Validate that totals are different after removal
+    Should Not Be Equal As Numbers    ${updated_total}    ${initial_total}
+    Log    Price correctly updated after removing product
